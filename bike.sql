@@ -1,3 +1,4 @@
+------------✅ Beginner Level (Basic Exploration)-----
 create database bike_store;
 use bike_store;
 
@@ -46,3 +47,75 @@ select brand_name, count(product_id) as total_product_count
 from brands left join products
 on brands.brand_id = products.brand_id
 group by brand_name;
+
+#What is the average, min, and max list_price of products in each category?
+SELECT 
+    c.category_name,
+    ROUND(AVG(p.list_price), 2) AS avg_price,
+    MIN(p.list_price) AS min_price,
+    MAX(p.list_price) AS max_price
+FROM products p
+JOIN categories c 
+    ON p.category_id = c.category_id
+GROUP BY c.category_name;
+
+#Which customer has placed the most orders?
+
+select first_name , last_name,count(order_id) as total_orders
+from customers 
+join orders
+on customers.customer_id = orders.customer_id
+group by  first_name,last_name
+order by total_orders desc
+limit 1;
+
+#Which staff member handled the most distinct orders?
+
+select staffs.staff_id,staffs.first_name,staffs.last_name,count(distinct order_id) as total_orders
+from orders join staffs
+on staffs.staff_id = orders.staff_id
+group by staff_id,staffs.first_name,staffs.last_name
+order by total_orders desc
+limit 1;
+
+
+#What is the monthly order volume (number of orders) for the past year?
+
+select year(order_date) as order_year,
+		month(order_date) as order_month,
+        count(order_id)
+from orders
+where order_date >= curdate() - interval 12 month
+group by order_year,order_month
+order by order_year,order_month ;
+#------------WE CAN SOLVE WITH USING 2 DIFFERNET WHERE CLAUSE----------
+
+select year(order_date) as order_year,
+       month(order_date) as order_month,
+       count(order_id) as total_orders
+from orders
+where order_date >= date_sub(curdate(), interval 1 year)
+group by order_year, order_month
+order by order_year, order_month;
+
+select * from order_items join stores;
+
+
+# for each store, compute the total revenue (sum of unit_price * quantity) from all order items.
+
+select s.store_name,
+       sum(p.list_price * oi.quantity) as revenue
+from order_items oi
+join products p on oi.product_id = p.product_id
+join orders o on oi.order_id = o.order_id
+join stores s on o.store_id = s.store_id
+group by s.store_name;
+
+#Which products are never ordered?
+
+select p.product_name
+from products p
+left join order_items oi on p.product_id = oi.product_id
+where oi.product_id is null;
+
+#------⭐ Advanced Level (Complex Queries / Insights)----------------
