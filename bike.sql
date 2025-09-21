@@ -119,3 +119,40 @@ left join order_items oi on p.product_id = oi.product_id
 where oi.product_id is null;
 
 #------⭐ Advanced Level (Complex Queries / Insights)----------------
+
+#Find the top 5 customers by revenue (total money spent), along with their names and total spend.
+
+SELECT 
+    c.first_name,
+    c.last_name,
+    SUM(oi.list_price * oi.quantity) AS revenue
+FROM customers c
+JOIN orders o 
+    ON c.customer_id = o.customer_id
+JOIN order_items oi 
+    ON o.order_id = oi.order_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY revenue DESC
+LIMIT 5;
+
+
+# identify products whose price is significantly higher than the category average 
+#---(e.g. more than 1.5× category average).---
+
+SELECT 
+    p.product_name,
+    c.category_name,
+    p.list_price,
+    cat_stats.avg_price,
+    ROUND(p.list_price / cat_stats.avg_price, 2) AS price_ratio
+FROM products p
+JOIN categories c 
+    ON p.category_id = c.category_id
+JOIN (
+    SELECT category_id, AVG(list_price) AS avg_price
+    FROM products
+    GROUP BY category_id
+) cat_stats
+    ON p.category_id = cat_stats.category_id
+WHERE p.list_price > 1.5 * cat_stats.avg_price
+ORDER BY price_ratio DESC;
