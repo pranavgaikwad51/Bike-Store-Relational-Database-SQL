@@ -1,5 +1,7 @@
 ------------✅ Beginner Level (Basic Exploration)-----
 create database bike_store;
+
+#---------AFTER THIS WE IMPORTED FILES THROUGH THE TABLE DATA IMPORT WIZARD-------📁
 use bike_store;
 
 show tables;
@@ -156,3 +158,43 @@ JOIN (
     ON p.category_id = cat_stats.category_id
 WHERE p.list_price > 1.5 * cat_stats.avg_price
 ORDER BY price_ratio DESC;
+
+#For each store, find the month in which it had its highest revenue.
+
+SELECT ranked.store_id,
+       ranked.order_month AS revenue_month,
+       ranked.monthly_revenue
+FROM (
+    SELECT s.store_id,
+           DATE_FORMAT(o.order_date, '%Y-%m') AS order_month,
+           SUM(oi.quantity * oi.list_price * (1 - oi.discount)) AS monthly_revenue,
+           RANK() OVER (
+               PARTITION BY s.store_id
+               ORDER BY SUM(oi.quantity * oi.list_price * (1 - oi.discount)) DESC
+           ) AS rnk
+    FROM stores s
+    JOIN orders o 
+        ON s.store_id = o.store_id
+    JOIN order_items oi 
+        ON o.order_id = oi.order_id
+    GROUP BY s.store_id, DATE_FORMAT(o.order_date, '%Y-%m')
+) ranked
+WHERE ranked.rnk = 1;
+
+
+#Analyze the trend in average order size (in terms of number of items per order) over time (e.g. by month).
+
+SELECT 
+    DATE_FORMAT(o.order_date, '%Y-%m') AS month,
+    AVG(os.order_size) AS avg_order_size
+FROM orders o
+JOIN (
+    SELECT order_id, SUM(quantity) AS order_size
+    FROM order_items
+    GROUP BY order_id
+) os ON o.order_id = os.order_id
+GROUP BY DATE_FORMAT(o.order_date, '%Y-%m')
+ORDER BY month asc;
+
+
+#-----------PROJECT COMPLETED-----------
